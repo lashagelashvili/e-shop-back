@@ -34,14 +34,13 @@ router.post("/", async (req, res) => {
     isAdmin: req.body.isAdmin,
     street: req.body.street,
     apartment: req.body.apartment,
-    city: req.body.city,
     zip: req.body.zip,
+    city: req.body.city,
     country: req.body.country,
   });
-
   user = await user.save();
 
-  if (!user) return res.status(404).send("the user cannot be created!");
+  if (!user) return res.status(400).send("the user cannot be created!");
 
   res.send(user);
 });
