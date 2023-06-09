@@ -53,64 +53,45 @@ router.get(`/:id`, async (req, res) => {
   res.send(product);
 });
 
-router.post(`/`, uploadOptions.single("image"), async (req, res) => {
-  const category = await Category.findById(req.body.category);
-  if (!category) return res.status(400).send("Invalid Category");
+router.post(
+  `/`,
+  uploadOptions.fields([
+    {
+      name: "image",
+      maxCount: 1,
+    },
+    {
+      name: "images",
+      maxCount: 4,
+    },
+  ]),
+  async (req, res) => {
+    const category = await Category.findById(req.body.category);
+    if (!category) return res.status(400).send("Invalid Category");
 
-  const file = req.file;
-  if (!file) return res.status(400).send("No image in the request");
+    const file = req.files["image"][0];
 
-  const fileName = file.filename;
-  const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
-  let product = new Product({
-    name: req.body.name,
-    description: req.body.description,
-    richDescription: req.body.richDescription,
-    image: `${basePath}${fileName}`, // "http://localhost:3000/public/upload/image-2323232"
-    brand: req.body.brand,
-    price: req.body.price,
-    category: req.body.category,
-    countInStock: req.body.countInStock,
-    rating: req.body.rating,
-    numReviews: req.body.numReviews,
-    isFeatured: req.body.isFeatured,
-  });
+    if (!file) return res.status(400).send("No image in the request");
 
-  product = await product.save();
+    const images = req.files["images"];
 
-  if (!product) return res.status(500).send("The product cannot be created");
-
-  res.send(product);
-});
-
-router.put("/:id", uploadOptions.single("image"), async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).send("Invalid Product Id");
-  }
-  const category = await Category.findById(req.body.category);
-  if (!category) return res.status(400).send("Invalid Category");
-
-  const product = await Product.findById(req.params.id);
-  if (!product) return res.status(400).send("Invalid Product!");
-
-  const file = req.file;
-  let imagepath;
-
-  if (file) {
     const fileName = file.filename;
     const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
-    imagepath = `${basePath}${fileName}`;
-  } else {
-    imagepath = product.image;
-  }
 
-  const updatedProduct = await Product.findByIdAndUpdate(
-    req.params.id,
-    {
+    let imageArr = [];
+
+    if (images) {
+      imageArr = images.map((image) => {
+        return `${basePath}${image.filename}`;
+      });
+    }
+
+    let product = new Product({
       name: req.body.name,
       description: req.body.description,
       richDescription: req.body.richDescription,
-      image: imagepath,
+      image: `${basePath}${fileName}`, // "http://localhost:3000/public/upload/image-2323232"
+      images: imageArr,
       brand: req.body.brand,
       price: req.body.price,
       category: req.body.category,
@@ -118,15 +99,84 @@ router.put("/:id", uploadOptions.single("image"), async (req, res) => {
       rating: req.body.rating,
       numReviews: req.body.numReviews,
       isFeatured: req.body.isFeatured,
+    });
+
+    product = await product.save();
+
+    if (!product) return res.status(500).send("The product cannot be created");
+
+    res.send(product);
+  }
+);
+
+router.put(
+  "/:id",
+  uploadOptions.fields([
+    {
+      name: "image",
+      maxCount: 1,
     },
-    { new: true }
-  );
+    {
+      name: "images",
+      maxCount: 4,
+    },
+  ]),
+  async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).send("Invalid Product Id");
+    }
+    const category = await Category.findById(req.body.category);
+    if (!category) return res.status(400).send("Invalid Category");
 
-  if (!updatedProduct)
-    return res.status(500).send("the product cannot be updated!");
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(400).send("Invalid Product!");
 
-  res.send(updatedProduct);
-});
+    const file = req.files.image;
+    const images = req.files.images;
+    let imagepath;
+    let imagesArr = [];
+
+    const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
+
+    if (file) {
+      const fileName = file[0].filename;
+      imagepath = `${basePath}${fileName}`;
+    } else {
+      imagepath = product.image;
+    }
+
+    if (images) {
+      imageArr = images.map((image) => {
+        return `${basePath}${image.filename}`;
+      });
+    } else {
+      imagesArr = product.images;
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      {
+        name: req.body.name,
+        description: req.body.description,
+        richDescription: req.body.richDescription,
+        image: imagepath,
+        brand: req.body.brand,
+        price: req.body.price,
+        category: req.body.category,
+        countInStock: req.body.countInStock,
+        rating: req.body.rating,
+        numReviews: req.body.numReviews,
+        isFeatured: req.body.isFeatured,
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct)
+      return res.status(500).send("the product cannot be updated!");
+
+    res.send(updatedProduct);
+  }
+);
 
 router.delete("/:id", (req, res) => {
   Product.findByIdAndRemove(req.params.id)
