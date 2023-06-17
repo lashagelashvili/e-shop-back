@@ -36,7 +36,9 @@ router.get(`/`, async (req, res) => {
     filter = { category: req.query.categories.split(",") };
   }
 
-  const productList = await Product.find(filter).populate("category");
+  const productList = await Product.find(filter)
+    .populate("category")
+    .sort({ dateCreated: -1 });
 
   if (!productList) {
     res.status(500).json({ success: false });
@@ -133,6 +135,7 @@ router.put(
 
     const file = req.files.image;
     const images = req.files.images;
+    // console.log(req, "REQUEST§");
     let imagepath;
     let imagesArr = [];
 
@@ -146,7 +149,7 @@ router.put(
     }
 
     if (images) {
-      imageArr = images.map((image) => {
+      imagesArr = images.map((image) => {
         return `${basePath}${image.filename}`;
       });
     } else {
@@ -160,6 +163,7 @@ router.put(
         description: req.body.description,
         richDescription: req.body.richDescription,
         image: imagepath,
+        images: imagesArr,
         brand: req.body.brand,
         price: req.body.price,
         category: req.body.category,
