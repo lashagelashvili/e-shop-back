@@ -7,6 +7,11 @@ const cors = require("cors");
 require("dotenv/config");
 const authJwt = require("./helpers/jwt");
 const errorHandler = require("./helpers/error-hander");
+const throttle = require("express-throttle");
+const throttleMiddleware = throttle({
+  rate: "3/s",
+  burst: 3,
+});
 
 app.use(cors());
 app.options("*", cors());
@@ -26,10 +31,10 @@ const ordersRoutes = require("./routes/orders");
 
 const api = process.env.API_URL;
 
-app.use(`${api}/categories`, categoriesRoutes);
-app.use(`${api}/products`, productsRoutes);
+app.use(`${api}/categories`, throttleMiddleware, categoriesRoutes);
+app.use(`${api}/products`, throttleMiddleware, productsRoutes);
 app.use(`${api}/users`, usersRoutes);
-app.use(`${api}/orders`, ordersRoutes);
+app.use(`${api}/orders`, throttleMiddleware, ordersRoutes);
 
 //Database
 mongoose
