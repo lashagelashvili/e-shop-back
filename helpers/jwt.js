@@ -21,8 +21,6 @@ function authJwt() {
 }
 
 const isRevokedCallback = async (req, token) => {
-  console.log(req, "kkkkk");
-  console.log(token, "token;;;;;;");
   // const issuer = token.payload.iss;
   // const tokenId = token.payload.jti;
   // const token2 = await data.getRevokedToken(issuer, tokenId);

@@ -92,7 +92,7 @@ router.post(
       name: req.body.name,
       description: req.body.description,
       richDescription: req.body.richDescription,
-      image: `${basePath}${fileName}`, // "http://localhost:3000/public/upload/image-2323232"
+      image: `${basePath}${fileName}`,
       images: imageArr,
       brand: req.body.brand,
       price: req.body.price,
@@ -135,7 +135,6 @@ router.put(
 
     const file = req.files.image;
     const images = req.files.images;
-    // console.log(req, "REQUEST§");
     let imagepath;
     let imagesArr = [];
 
